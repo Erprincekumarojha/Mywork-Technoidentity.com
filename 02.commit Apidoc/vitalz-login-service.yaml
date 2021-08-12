@@ -1,0 +1,292 @@
+openapi: 3.0.1
+info:
+  title: 'Login Module '
+  description: "This API for Login staff(ADMIN,DOCTOR,NURSE) and Patient_Caretatker\
+    \ | List Hospital & List of Patient Also there"
+  version: 1.0.0
+servers:
+- url: http://20.204.14.2
+  description: Generated server url
+paths:
+  /login/staff/login:
+    post:
+      tags:
+      - staff-login-controller
+      summary: This Method is Use to validate the user from database and also provide
+        the token
+      operationId: generateToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JwtRequest'
+        required: true
+      responses:
+        "200":
+          description: 'Successfully User is validate from Database and send the token
+            with User Details '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponce'
+        "401":
+          description: Bad Credential User are requesting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /login/patient-caretakers:
+    post:
+      tags:
+      - patient-caretaker-controller
+      summary: This will fetch List of Patient Detailas base on Hospital Name
+      operationId: patitentList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestData'
+        required: true
+      responses:
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "400":
+          description: Invalid Mobile Number
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "200":
+          description: 'Successfully fetch All Patient Details from Database '
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientDataList'
+  /login/hospital-name:
+    post:
+      tags:
+      - hospital-controller
+      summary: This will fetch List of  Hospital name
+      operationId: getHospitalName
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsPojo'
+        required: true
+      responses:
+        "200":
+          description: 'Successfully fetch All Hospital Name from Database '
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HospitalListResponse'
+        "204":
+          description: No one Hospital is avilable in Database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /login/caretaker/send-otp:
+    post:
+      tags:
+      - caretaker-for-send-sms-controller
+      summary: 'This Method is Use to validate the Mobile No. If Mobile No is available
+        In DB then Send OTP 6-digit '
+      operationId: smsSubmit
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsPojo'
+        required: true
+      responses:
+        "500":
+          description: Invalid Mobile No. It is not available in DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "400":
+          description: "if your mobile number is not valid format : Invalid Mobile\
+            \ No  "
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        "200":
+          description: 'Successfully OTP Send Given Mobile No '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+  /login/caretaker/login:
+    post:
+      tags:
+      - caretaker-for-validat-otp-controller
+      summary: This Method is Use to validate the OTP If OTP is valid then send Response
+        Token with USER Details
+      operationId: generateToken_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TempOTP'
+        required: true
+      responses:
+        "500":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "400":
+          description: Invalid OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "200":
+          description: 'Successfully OTP is validated '
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaretakerResponse'
+components:
+  schemas:
+    JwtRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+        password:
+          type: string
+    JwtResponce:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserDetailsResponse'
+    UserDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - doctor
+          - nurse
+          - admin
+          - caretaker
+          - patient
+        phoneNo:
+          type: string
+        phoneExt:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: string
+          enum:
+          - wrong_password
+          - invalid_input
+        message:
+          type: string
+    RequestData:
+      type: object
+      properties:
+        hospitalId:
+          type: string
+        phoneNo:
+          type: string
+    PatientDataList:
+      type: object
+      properties:
+        name:
+          type: string
+        patientId:
+          type: string
+        emergencyContactNumber:
+          type: string
+        emergencyContactName:
+          type: string
+        gender:
+          type: string
+          enum:
+          - m
+          - f
+          - o
+        age:
+          type: integer
+          format: int32
+    SmsPojo:
+      type: object
+      properties:
+        phoneNo:
+          type: string
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+    HospitalListResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        hospitalName:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        status:
+          type: boolean
+    SuccessResponse:
+      type: object
+      properties:
+        reason:
+          type: string
+        success:
+          type: boolean
+    TempOTP:
+      type: object
+      properties:
+        otp:
+          type: integer
+          format: int32
+        phoneNo:
+          type: string
+    CaretakerResponceData:
+      type: object
+      properties:
+        name:
+          type: string
+        phoneNo:
+          type: string
+    CaretakerResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/CaretakerResponceData'
